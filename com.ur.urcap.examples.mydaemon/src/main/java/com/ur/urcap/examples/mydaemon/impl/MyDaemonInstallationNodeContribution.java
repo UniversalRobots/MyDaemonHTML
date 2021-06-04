@@ -11,7 +11,7 @@ import com.ur.urcap.api.ui.component.InputEvent;
 import com.ur.urcap.api.ui.component.InputTextField;
 import com.ur.urcap.api.ui.component.LabelComponent;
 
-import java.awt.*;
+import java.awt.EventQueue;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -167,17 +167,22 @@ public class MyDaemonInstallationNodeContribution implements InstallationNodeCon
 	}
 
 	private void applyDesiredDaemonStatus() {
-		if (isDaemonEnabled()) {
-			// Download the daemon settings to the daemon process on initial start for real-time preview purposes
-			try {
-				awaitDaemonRunning(5000);
-				xmlRpcDaemonInterface.setTitle(getPopupTitle());
-			} catch(Exception e){
-				System.err.println("Could not set the title in the daemon process.");
+		new Thread(new Runnable() {
+			@Override
+			public void run() {
+				if (isDaemonEnabled()) {
+					// Download the daemon settings to the daemon process on initial start for real-time preview purposes
+					try {
+						awaitDaemonRunning(5000);
+						xmlRpcDaemonInterface.setTitle(getPopupTitle());
+					} catch (Exception e) {
+						System.err.println("Could not set the title in the daemon process.");
+					}
+				} else {
+					daemonService.getDaemon().stop();
+				}
 			}
-		} else {
-			daemonService.getDaemon().stop();
-		}
+		}).start();
 	}
 
 	private void awaitDaemonRunning(long timeOutMilliSeconds) throws InterruptedException {
